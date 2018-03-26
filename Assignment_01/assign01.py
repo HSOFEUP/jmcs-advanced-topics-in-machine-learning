@@ -1,4 +1,8 @@
-# Notice that in this assignment you are not allowed to use torch optimizer and nn module.
+# Advanced Topics in Machine Learning, University of Bern, Spring Semester 2018
+#
+# Assignment 01
+# Lukas Zbinden, 26.03.2018
+#
 import torch
 import numpy as np
 import torchvision.datasets as dsets
