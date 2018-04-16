@@ -1,7 +1,9 @@
 # Advanced Topics in Machine Learning, University of Bern, Spring Semester 2018
 #
 # Assignment 01
-# Lukas Zbinden, 26.03.2018
+# Lukas Zbinden, 23.03.2018
+#
+# https://github.com/lukaszbinden/jmcs-advanced-topics-in-machine-learning
 #
 import torch
 import numpy as np
@@ -57,7 +59,7 @@ H_values = [8, 16, 32, 64, 128, 128+64, 256, 256+64, 384, 384+64, 512]
 PSNR_values = []
 
 # Train the Model
-for H in H_values:
+for H in H_values:^^^
     # init weight matrices
     W1 = torch.randn(M, H)
     W2 = torch.randn(H, M)
