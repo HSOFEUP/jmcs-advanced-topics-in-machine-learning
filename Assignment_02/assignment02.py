@@ -12,6 +12,7 @@ import numpy as np
 from AutoencoderNet import AutoencoderNet
 from torch.autograd import Variable
 from math import log10
+from datetime import datetime
 
 # Hyper Parameters
 num_epochs = 10
@@ -118,16 +119,17 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
 
     return model
 
-'''
+
 def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
     lr = 1e-3
     model.eval()
     # Get the feature dimension by passing a random input
     feat_dim = model.get_features(torch.autograd.Variable(torch.FloatTensor(1, 1, 28, 28))).shape[1]
 
-    lin_criterion =  # TODO : define the loss
+    lin_criterion = nn.CrossEntropyLoss()  # TODO : define the loss
+    # Applies a linear transformation to the incoming data: y=Ax+b
     lin_model = torch.nn.Sequential(torch.nn.Linear(feat_dim, 10))
-    lin_optimizer =  # TODO : define the optimizer
+    lin_optimizer = torch.optim.Adam(lin_model.parameters(), lr=lr, weight_decay=0)  # TODO : define the optimizer
 
     top1 = AverageMeter()
     top5 = AverageMeter()
@@ -143,6 +145,8 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
         # training for loop
         for i, (images, target) in enumerate(train_loader):
+            #images, target = Variable(images), Variable(target)
+            target = Variable(target)
 
             # target includes the character labels
             # get the encoder features
@@ -150,7 +154,13 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
             # TODO : implement a full step of optimization.
 
-            prec1, prec5 = accuracy(pred.data, target, topk=(1, 5))
+            lin_optimizer.zero_grad()
+            pred = lin_model(feats)
+            loss = lin_criterion(pred, target)
+            loss.backward()
+            lin_optimizer.step()
+
+            prec1, prec5 = accuracy(pred.data, target.data, topk=(1, 5))
             top1.update(prec1[0], images.size(0))
             top5.update(prec5[0], images.size(0))
 
@@ -158,13 +168,16 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
                 print('Linear classifier Epoch: [{0}][{1}/{2}]\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                    epoch, i, len(train_loader), top1=top1, top5=top5))
+                        epoch, i, len(train_loader), top1=top1, top5=top5))
 
         lin_model.eval()
         top1.reset()
         top5.reset()
         for i, (images, target) in enumerate(test_loader):
             # TODO : extract the feature and compute classifier predictions
+
+            feats = model.get_features(torch.autograd.Variable(images))
+            pred = lin_model(feats)
 
             prec1, prec5 = accuracy(pred.data, target, topk=(1, 5))
             top1.update(prec1[0], images.size(0))
@@ -173,7 +186,7 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
         print('===>>>\t'
               'Prec@1 ({top1.avg:.3f})\t'
               'Prec@5 ({top5.avg:.3f})'.format(top1=top1, top5=top5))
-'''
+
 
 # MNIST Dataset
 train_dataset = dsets.MNIST(root='./data',
@@ -194,5 +207,18 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                           batch_size=batch_size,
                                           shuffle=False)
 
-model = TrainAutoencoder(train_loader, test_loader, num_epochs)
-#TrainLinearClassifier(model, train_loader, test_loader, num_epochs)
+
+tstart = datetime.now()
+try:
+    model = torch.load('trained_autoencoder.pt')
+except FileNotFoundError:
+    print("model not on file system")
+    model = TrainAutoencoder(train_loader, test_loader, num_epochs)
+    torch.save(model, 'trained_autoencoder.pt')
+else:
+    print("model available from file system.")
+
+TrainLinearClassifier(model, train_loader, test_loader, num_epochs)
+
+tend = datetime.now()
+print('elapsed time: %s' % str((tend-tstart)))
