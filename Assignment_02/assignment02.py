@@ -106,13 +106,14 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
             mse = torch.mean((outputs - input_var.cpu()).pow(2))
             psnr = 10 * log10(1 / mse)
             avg_psnr += psnr
-            if psnr > best_psnr:
-                best_psnr = psnr
+
+        if avg_psnr > best_psnr:
+            best_psnr = avg_psnr
 
         print("[%d/%d] ===> Avg. PSNR: {:.4f} dB".format(avg_psnr / len(test_loader))
               % (epoch + 1, num_epochs))
 
-    print("===> best PSNR: {:.4f} dB".format(best_psnr))
+    print("===> best PSNR: {:.4f} dB".format(best_psnr / len(test_loader)))
     return model
 
 
