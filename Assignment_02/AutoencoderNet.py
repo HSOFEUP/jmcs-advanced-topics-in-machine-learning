@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class AutoencoderNet(nn.Module):
     def __init__(self):
         super(AutoencoderNet, self).__init__()
@@ -24,25 +25,25 @@ class AutoencoderNet(nn.Module):
     def forward(self, x):
         en = self.encoder(x)
 
-        print('en: ')
-        print(type(en))
-        print(en.size())
-        print('-------------en')
+        #print('en: ')
+        #print(type(en))
+        #print(en.size())
+        #print('-------------en')
 
         out = self.decoder(en)
 
-        print('out: ')
-        print(out.size())
-        print('-------------out')
+        #print('out: ')
+        #print(out.size())
+        #print('-------------out')
 
         # crop the centeral box with the same size as input.
         x_off = int((out.shape[2] - x.shape[2]) / 2)
         y_off = int((out.shape[3] - x.shape[3]) / 2)
         out = out[:, :, x_off:x_off + x.shape[2], y_off:y_off + x.shape[3]]
-        print('out: ')
-        print(out.size())
-        print('-------------out2')
-        print (2/0)
+        #print('out: ')
+        #print(out.size())
+        #print('-------------out2')
+        #print (2/0)
         return out
 
     def get_features(self, x):

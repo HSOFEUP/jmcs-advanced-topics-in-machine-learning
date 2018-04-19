@@ -60,9 +60,9 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
     lr = 1e-3
     model = AutoencoderNet()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)  # TODO : define ans set the optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0)  # TODO : define ans set the optimizer
 
-    criterion = nn.CrossEntropyLoss()  # TODO : define the loss function
+    criterion = nn.MSELoss()  # TODO : define the loss function
 
     for epoch in range(num_epochs):
 
@@ -91,17 +91,30 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
                       % (epoch + 1, num_epochs, i + 1, len(train_dataset) // batch_size, loss))
 
         model.eval()
+        # TODO: what is pred_imgs for?
         pred_imgs = np.zeros((100 * 28, 200 * 28), dtype=np.uint8) + 100
         avg_psnr = 0
         # Testing loop for an epoch
-        for images, labels in test_loader:
+        for images, _ in test_loader:
             # TODO : calculate the outputs
+            images, input_var = Variable(images, volatile=True), Variable(images)
+
+            outputs = model(images)
+
+            #print(type(outputs))
+            #print(type(input_var))
+            #print(outputs.size())
+            #print(input_var.size())
+            #result = criterion(outputs, input_var)
+            #print(type(result))
+            #print(result.size())
 
             mse = torch.mean((outputs - input_var.cpu()).pow(2))
             psnr = 10 * log10(1 / mse)
             avg_psnr += psnr
 
-        print("===> Avg. PSNR: {:.4f} dB".format(avg_psnr / len(test_loader)))
+        print("[%d/%d] ===> Avg. PSNR: {:.4f} dB".format(avg_psnr / len(test_loader))
+              % (epoch + 1, num_epochs))
 
     return model
 
