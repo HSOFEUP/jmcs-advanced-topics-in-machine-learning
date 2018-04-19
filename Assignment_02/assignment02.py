@@ -64,6 +64,7 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0)  # TODO : define ans set the optimizer
 
     criterion = nn.MSELoss()  # TODO : define the loss function
+    best_psnr = -1
 
     for epoch in range(num_epochs):
 
@@ -102,21 +103,16 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
 
             outputs = model(images)
 
-            #print(type(outputs))
-            #print(type(input_var))
-            #print(outputs.size())
-            #print(input_var.size())
-            #result = criterion(outputs, input_var)
-            #print(type(result))
-            #print(result.size())
-
             mse = torch.mean((outputs - input_var.cpu()).pow(2))
             psnr = 10 * log10(1 / mse)
             avg_psnr += psnr
+            if psnr > best_psnr:
+                best_psnr = psnr
 
         print("[%d/%d] ===> Avg. PSNR: {:.4f} dB".format(avg_psnr / len(test_loader))
               % (epoch + 1, num_epochs))
 
+    print("===> best PSNR: {:.4f} dB".format(best_psnr))
     return model
 
 
@@ -133,6 +129,7 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
     top1 = AverageMeter()
     top5 = AverageMeter()
+    best_top1 = best_top5 = -1
 
     for epoch in range(num_epochs):
 
@@ -145,7 +142,6 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
         # training for loop
         for i, (images, target) in enumerate(train_loader):
-            #images, target = Variable(images), Variable(target)
             target = Variable(target)
 
             # target includes the character labels
@@ -186,6 +182,13 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
         print('===>>>\t'
               'Prec@1 ({top1.avg:.3f})\t'
               'Prec@5 ({top5.avg:.3f})'.format(top1=top1, top5=top5))
+        if top1.avg > best_top1:
+            best_top1 = top1.avg
+        if top5.avg > best_top5:
+            best_top5 = top5.avg
+
+    print("===> best top-1: {:.4f} dB".format(best_top1))
+    print("===> best top-5: {:.4f} dB".format(best_top5))
 
 
 # MNIST Dataset
@@ -209,15 +212,16 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 
 tstart = datetime.now()
-try:
-    model = torch.load('trained_autoencoder.pt')
-except FileNotFoundError:
-    print("model not on file system")
-    model = TrainAutoencoder(train_loader, test_loader, num_epochs)
-    torch.save(model, 'trained_autoencoder.pt')
-else:
-    print("model available from file system.")
+#try:
+#    model = torch.load('trained_autoencoder.pt')
+#except FileNotFoundError:
+#    print("model not on file system")
+#    model = TrainAutoencoder(train_loader, test_loader, num_epochs)
+#    torch.save(model, 'trained_autoencoder.pt')
+#else:
+#    print("model available from file system.")
 
+model = TrainAutoencoder(train_loader, test_loader, num_epochs)
 TrainLinearClassifier(model, train_loader, test_loader, num_epochs)
 
 tend = datetime.now()
