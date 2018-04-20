@@ -1,20 +1,21 @@
 Report assignment 02
 ====================
 Lukas Zbinden
+01-195-346
 
 
 1) 
 Which optimizer works for your setting? Report the best reconstruction PSNR.
 
-- The optimizer that works well is torch.optim.Adam. Better than e.g. torch.optim.SGD
+- The optimizer that works well is torch.optim.Adam. Better than e.g. torch.optim.SGD (according to a test run)
 
-- the best reconstruction PSNR reported is:
+- the best reconstruction PSNR reported is: 14.7441 dB
 
 
 2)
 Report the best top-1 and top-5 accuracies that you obtain by training the network within 10 minutes.
-- best top-1 accuracy: 72.9000 dB
-- best top-5 accuracy: 97.9500 dB
+- best top-1 accuracy: 85.2000 dB
+- best top-5 accuracy: 99.1200 dB
 
 
 3)
@@ -24,7 +25,10 @@ Report the best reconstruction PSNR and classification top-1 and top-5 accuracie
 - best top-1 accuracy: 89.7800 dB
 - best top-5 accuracy: 99.5500 dB
 
-The gain in performance happens thanks to the nonlinearity addition (ReLU) in the autoencoder.
+The gain in performance happens thanks to the nonlinearity addition (ReLU) in the autoencoder and the 3 additional layers (linear, ReLU and dropout) in the linear classifier model. 
+The addition of activation functions (i.e. ReLU layers) in the autoencoder architecture allows for better performance in the backpropagation process and therefore a better learning process. Put simplified, ReLU layers facilitate large and consistent gradients (if respective unit is active) which are more useful for learning.
+
 
 
 4)
+The final solution (including all the changes made for 3)) reaches a top-1 accuracy of 89.78%. The trained model of that performance was persisted and is attached in the file 'trained_autoencoder.pt'. The program can be run and it will pick up that model automatically if it resides in same directory as the source file.
