@@ -99,11 +99,11 @@ def TrainAutoencoder(train_loader, test_loader, num_epochs):
         # Testing loop for an epoch
         for images, _ in test_loader:
             # TODO : calculate the outputs
-            images, input_var = Variable(images, volatile=True), Variable(images)
+            images = Variable(images)
 
             outputs = model(images)
 
-            mse = torch.mean((outputs - input_var.cpu()).pow(2))
+            mse = torch.mean((outputs - images.cpu()).pow(2))
             psnr = 10 * log10(1 / mse)
             avg_psnr += psnr
 
@@ -125,7 +125,12 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
     lin_criterion = nn.CrossEntropyLoss()  # TODO : define the loss
     # Applies a linear transformation to the incoming data: y=Ax+b
-    lin_model = torch.nn.Sequential(torch.nn.Linear(feat_dim, 10))
+    #lin_model = torch.nn.Sequential(torch.nn.Linear(feat_dim, 10))
+    lin_model = nn.Sequential(nn.Linear(feat_dim, feat_dim),
+                              nn.ReLU(True),
+                              nn.Dropout(p=0.2),
+                              nn.Linear(feat_dim, 10),
+                              )
     lin_optimizer = torch.optim.Adam(lin_model.parameters(), lr=lr, weight_decay=0)  # TODO : define the optimizer
 
     top1 = AverageMeter()
@@ -193,16 +198,6 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
 
 # MNIST Dataset
-train_tf = transforms.Compose([
-            #transforms.RandomResizedCrop(28),
-            #transforms.RandomRotation(30),
-            transforms.RandomHorizontalFlip(),  # data augmentation: random horizontal flip
-            transforms.ToTensor(),
-            #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            #ts.transforms.Rotate(20),  # data augmentation: rotation
-            #ts.transforms.Rotate(-20)  # data augmentation: rotation
-        ])
-
 train_dataset = dsets.MNIST(root='./data',
                             train=True,
                             transform=transforms.ToTensor(),
@@ -223,14 +218,14 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 
 
 tstart = datetime.now()
-#try:
-#    model = torch.load('trained_autoencoder.pt')
-#except FileNotFoundError:
-#    print("model not on file system")
-#    model = TrainAutoencoder(train_loader, test_loader, num_epochs)
-#    torch.save(model, 'trained_autoencoder.pt')
-#else:
-#    print("model available from file system.")
+try:
+    model = torch.load('trained_autoencoder.pt')
+except FileNotFoundError:
+    print("model not on file system")
+    model = TrainAutoencoder(train_loader, test_loader, num_epochs)
+    torch.save(model, 'trained_autoencoder.pt')
+else:
+    print("model available from file system.")
 
 model = TrainAutoencoder(train_loader, test_loader, num_epochs)
 TrainLinearClassifier(model, train_loader, test_loader, num_epochs)
