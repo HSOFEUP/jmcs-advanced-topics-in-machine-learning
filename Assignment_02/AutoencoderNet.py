@@ -32,6 +32,14 @@ class AutoencoderNet(nn.Module):
             nn.ReLU(True),
             nn.ConvTranspose2d(12, 1, kernel_size=2, stride=2),  # 1 x 30 x 30  OR  1 x 34 x 34
             nn.ReLU(True)
+            #nn.ConvTranspose2d(8, 10, kernel_size=3, stride=2, padding=0),  # 12 x 5 x 5
+            #nn.ReLU(True),
+            #nn.ConvTranspose2d(10, 12, kernel_size=2, stride=2, padding=0),  # 12 x 10 x 10
+            #nn.ReLU(True),
+            #nn.ConvTranspose2d(12, 12, kernel_size=3, stride=2, padding=2),  # 12 x 17 x 17
+            #nn.ReLU(True),
+            #nn.ConvTranspose2d(12, 1, kernel_size=3, stride=2, padding=2),  # 1 x 31 x 31
+            #nn.ReLU(True)
         )
 
     def forward(self, x):

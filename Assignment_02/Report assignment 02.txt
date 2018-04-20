@@ -20,6 +20,6 @@ Report the best top-1 and top-5 accuracies that you obtain by training the netwo
 3)
 Report the best reconstruction PSNR and classification top-1 and top-5 accuracies. Do you get a higher performance? Justify your observation.
 
-- the best reconstruction PSNR reported is: 16.2337 dB
-- best top-1 accuracy: 86.7100 dB
-- best top-5 accuracy: 99.1700 dB
+- the best reconstruction PSNR reported is: 16.3960 dB
+- best top-1 accuracy: 87.4100 dB
+- best top-5 accuracy: 99.3200 dB

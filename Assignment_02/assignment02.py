@@ -193,6 +193,16 @@ def TrainLinearClassifier(model, train_loader, test_loader, num_epochs):
 
 
 # MNIST Dataset
+train_tf = transforms.Compose([
+            #transforms.RandomResizedCrop(28),
+            #transforms.RandomRotation(30),
+            transforms.RandomHorizontalFlip(),  # data augmentation: random horizontal flip
+            transforms.ToTensor(),
+            #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            #ts.transforms.Rotate(20),  # data augmentation: rotation
+            #ts.transforms.Rotate(-20)  # data augmentation: rotation
+        ])
+
 train_dataset = dsets.MNIST(root='./data',
                             train=True,
                             transform=transforms.ToTensor(),
