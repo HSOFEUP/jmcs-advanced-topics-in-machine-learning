@@ -227,7 +227,6 @@ except FileNotFoundError:
 else:
     print("model available from file system.")
 
-model = TrainAutoencoder(train_loader, test_loader, num_epochs)
 TrainLinearClassifier(model, train_loader, test_loader, num_epochs)
 
 tend = datetime.now()
