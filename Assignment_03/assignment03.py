@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 # Set Hyperparameters
-noise_type = None  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
+noise_type = 'noise_salt_pepper'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
 finetune = False
 num_epochs = 10
 batch_size = 128
@@ -146,13 +146,20 @@ def noise_additive_gaussian(imgs, sigma=.5):
         imgs_n: The noisy images
 
     """
-    imgs_n = None
+    #print
+    #imgs_n = None
     #######################################################################
-    # TODO:                                                               #
+    #                                                                     #
     # Apply additive Gaussian noise to the images                         #
     #                                                                     #
     #######################################################################
-    pass
+
+    # src: https://discuss.pytorch.org/t/writing-a-simple-gaussian-noise-layer-in-pytorch/4694
+
+    mean = 0.0
+    noise = Variable(imgs.data.new(imgs.size()).normal_(mean, sigma))
+    imgs_n = imgs + noise
+
     #######################################################################
     #                         END OF YOUR CODE                            #
     #######################################################################
@@ -171,13 +178,26 @@ def noise_salt_pepper(imgs, noise_rate=0.5):
         imgs_n: The noisy images
 
     """
-    imgs_n = None
+    # imgs_n = None
     #######################################################################
-    # TODO:                                                               #
+    #                                                                     #
     # Apply Salt&Pepper noise to the images                               #
     #                                                                     #
     #######################################################################
-    pass
+
+    imgs_clone = imgs.clone().view(-1, 1)
+    num_feature = imgs_clone.size(0)
+    mn = imgs_clone.min()
+    mx = imgs_clone.max()
+    proportion = 0.3
+    indices = np.random.randint(0, num_feature, int(num_feature*proportion))
+    for elem in indices:
+        if np.random.random() < 0.5:
+            imgs_clone[elem] = mn
+        else:
+            imgs_clone[elem] = mx
+    imgs_n = imgs_clone.view(imgs.size())
+
     #######################################################################
     #                         END OF YOUR CODE                            #
     #######################################################################
