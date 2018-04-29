@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 # Set Hyperparameters
-noise_type = 'noise_salt_pepper'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
+noise_type = 'noise_masking'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
 finetune = False
 num_epochs = 10
 batch_size = 128
@@ -146,8 +146,6 @@ def noise_additive_gaussian(imgs, sigma=.5):
         imgs_n: The noisy images
 
     """
-    #print
-    #imgs_n = None
     #######################################################################
     #                                                                     #
     # Apply additive Gaussian noise to the images                         #
@@ -178,7 +176,6 @@ def noise_salt_pepper(imgs, noise_rate=0.5):
         imgs_n: The noisy images
 
     """
-    # imgs_n = None
     #######################################################################
     #                                                                     #
     # Apply Salt&Pepper noise to the images                               #
@@ -189,8 +186,7 @@ def noise_salt_pepper(imgs, noise_rate=0.5):
     num_feature = imgs_clone.size(0)
     mn = imgs_clone.min()
     mx = imgs_clone.max()
-    proportion = 0.3
-    indices = np.random.randint(0, num_feature, int(num_feature*proportion))
+    indices = np.random.randint(0, num_feature, int(num_feature * noise_rate))
     for elem in indices:
         if np.random.random() < 0.5:
             imgs_clone[elem] = mn
@@ -217,13 +213,28 @@ def noise_masking(imgs, drop_rate=0.5, tile_size=7):
         imgs_n: The noisy images
 
     """
-    imgs_n = None
     #######################################################################
-    # TODO:                                                               #
+    #                                                                     #
     # Apply masking to the images                                         #
     #                                                                     #
     #######################################################################
-    pass
+
+    imgs_clone = imgs.clone()
+    lenx = imgs_clone.size(2)
+    leny = imgs_clone.size(3)
+    #lenx = tile_size
+    #leny = tile_size
+    for i in range(imgs_clone.size(0)):
+        #maskx = np.random.uniform(drop_rate, 1, 1)
+        #masky = drop_rate/maskx
+        maskx = masky = tile_size
+        idx = np.random.randint(0, lenx - maskx, 1)[0]
+        idy = np.random.randint(0, leny - masky, 1)[0]
+        for j in range(idx, idx + maskx):
+            for k in range(idy, idy + masky):
+                imgs_clone[i, 0, j, k] = 0
+    imgs_n = imgs_clone
+
     #######################################################################
     #                         END OF YOUR CODE                            #
     #######################################################################
