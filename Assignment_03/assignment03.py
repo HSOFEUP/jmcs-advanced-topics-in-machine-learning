@@ -275,11 +275,11 @@ for epoch in range(num_epochs):
         if cuda_available:
             image = image.cuda()
         image = Variable(image)
-        image_n = image_fn(image)
+        image_noised = image_fn(image)
 
         # Training Step
         optimizer.zero_grad()
-        output = encoder(image_n)
+        output = encoder(image_noised)
         output = decoder(output)
         loss = loss_func(output, image)
         loss.backward()
@@ -300,15 +300,15 @@ test_imgs, test_labels = next(iter(testloader))
 if cuda_available:
     test_imgs, test_labels = test_imgs.cuda(), test_labels.cuda()
 test_imgs, test_labels = Variable(test_imgs), Variable(test_labels)
-image_in = image_fn(test_imgs)
+test_imgs_noised = image_fn(test_imgs)
 
-output = encoder(image_in)
+output = encoder(test_imgs_noised)
 output = decoder(output)
 
 # Visualize in and output of the Autoencoder
 fig_out = plt.figure('out', figsize=(10, 10))
 fig_in = plt.figure('in', figsize=(10, 10))
-for ind, (img_out, img_in) in enumerate(zip(output, image_in)):
+for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
     if ind > 63:
         break
     plt.figure('out')
@@ -331,13 +331,17 @@ print('--------------------------------------------------------------')
 #   - Build the classifier                                            #
 #   - Define the optimizer                                            #
 #   - Define the loss function                                        #
-# Note: The setup might be diffent for finetuning or fixed features   #
+# Note: The setup might be different for finetuning or fixed features #
 #       (see variable finetune!)                                      #
 #                                                                     #
 #######################################################################
-clf = None
-optimizer = None
-loss_func = None
+clf = Classifier()
+if finetune:
+    parameters = list(encoder.parameters()) + list(clf.parameters())
+else:
+    parameters = clf.parameters()
+optimizer = optim.SGD(parameters, lr=learning_rate, momentum=0.9)
+loss_func = nn.CrossEntropyLoss()
 #######################################################################
 #                         END OF YOUR CODE                            #
 #######################################################################
