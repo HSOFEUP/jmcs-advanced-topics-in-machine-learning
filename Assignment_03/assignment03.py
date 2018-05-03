@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 
 # Set Hyperparameters
-noise_type = 'noise_masking'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
-finetune = False
-num_epochs = 10
+noise_type = 'noise_salt_pepper'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
+finetune = True
+num_epochs = 1
 batch_size = 128
 learning_rate = 0.001
 LAYER_DIMS = [16, 8, 8]
@@ -42,7 +42,7 @@ testloader = torch.utils.data.DataLoader(dataset=mnist_test,
                                          num_workers=2,
                                          drop_last=True)
 
-# Choose 5000 examples for transer learning
+# Choose 5000 examples for transfer learning
 mask = np.random.randint(0, 60000, 5000)
 finetune_loader = torch.utils.data.DataLoader(dataset=mnist_train,
                                               batch_size=batch_size,
@@ -222,17 +222,13 @@ def noise_masking(imgs, drop_rate=0.5, tile_size=7):
     imgs_clone = imgs.clone()
     lenx = imgs_clone.size(2)
     leny = imgs_clone.size(3)
-    #lenx = tile_size
-    #leny = tile_size
     for i in range(imgs_clone.size(0)):
-        #maskx = np.random.uniform(drop_rate, 1, 1)
-        #masky = drop_rate/maskx
-        maskx = masky = tile_size
-        idx = np.random.randint(0, lenx - maskx, 1)[0]
-        idy = np.random.randint(0, leny - masky, 1)[0]
-        for j in range(idx, idx + maskx):
-            for k in range(idy, idy + masky):
-                imgs_clone[i, 0, j, k] = 0
+        for idx in range(0, lenx, tile_size):
+            for idy in range(0, leny, tile_size):
+                if np.random.random() < drop_rate:
+                    for j in range(idx, idx + tile_size):
+                        for k in range(idy, idy + tile_size):
+                            imgs_clone[i, 0, j, k] = 0
     imgs_n = imgs_clone
 
     #######################################################################
@@ -271,17 +267,17 @@ print('--------------------------------------------------------------')
 for epoch in range(num_epochs):
     losses = []
     start = time.time()
-    for batch_index, (image, _) in enumerate(train_loader):
+    for batch_index, (images, _) in enumerate(train_loader):
         if cuda_available:
-            image = image.cuda()
-        image = Variable(image)
-        image_noised = image_fn(image)
+            images = images.cuda()
+        images = Variable(images)
+        image_noised = image_fn(images)
 
         # Training Step
         optimizer.zero_grad()
         output = encoder(image_noised)
         output = decoder(output)
-        loss = loss_func(output, image)
+        loss = loss_func(output, images)
         loss.backward()
         optimizer.step()
         losses.append(loss.data[0])
@@ -306,20 +302,20 @@ output = encoder(test_imgs_noised)
 output = decoder(output)
 
 # Visualize in and output of the Autoencoder
-fig_out = plt.figure('out', figsize=(10, 10))
-fig_in = plt.figure('in', figsize=(10, 10))
-for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
-    if ind > 63:
-        break
-    plt.figure('out')
-    fig_out.add_subplot(8, 8, ind + 1)
-    plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
-    plt.axis('off')
-    plt.figure('in')
-    fig_in.add_subplot(8, 8, ind + 1)
-    plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
-    plt.axis('off')
-plt.show()
+# fig_out = plt.figure('out', figsize=(10, 10))
+# fig_in = plt.figure('in', figsize=(10, 10))
+# for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
+#     if ind > 63:
+#         break
+#     plt.figure('out')
+#     fig_out.add_subplot(8, 8, ind + 1)
+#     plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
+#     plt.axis('off')
+#     plt.figure('in')
+#     fig_in.add_subplot(8, 8, ind + 1)
+#     plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
+#     plt.axis('off')
+# plt.show()
 
 print('--------------------------------------------------------------')
 print('------------------- Transfer Learning ------------------------')
@@ -336,12 +332,16 @@ print('--------------------------------------------------------------')
 #                                                                     #
 #######################################################################
 clf = Classifier()
+if cuda_available:
+    clf = clf.cuda()
 if finetune:
     parameters = list(encoder.parameters()) + list(clf.parameters())
+    encoder.train()
 else:
     parameters = clf.parameters()
-optimizer = optim.SGD(parameters, lr=learning_rate, momentum=0.9)
+optimizer = torch.optim.SGD(parameters, lr=learning_rate, momentum=0.9)
 loss_func = nn.CrossEntropyLoss()
+
 #######################################################################
 #                         END OF YOUR CODE                            #
 #######################################################################
@@ -350,16 +350,16 @@ loss_func = nn.CrossEntropyLoss()
 for epoch in range(30):
     losses = []
     start = time.time()
-    for batch_index, (image, label) in enumerate(finetune_loader):
+    for batch_index, (images, labels) in enumerate(finetune_loader):
         if cuda_available:
-            image, label = image.cuda(), label.cuda()
-        image, label = Variable(image), Variable(label)
+            images, labels = images.cuda(), labels.cuda()
+        images, labels = Variable(images), Variable(labels)
 
         # Training Step
         optimizer.zero_grad()
-        output = encoder(image)
+        output = encoder(images)
         output = clf(output)
-        loss = loss_func(output, label)
+        loss = loss_func(output, labels)
         loss.backward()
         optimizer.step()
         losses.append(loss.data[0])
@@ -373,7 +373,27 @@ for epoch in range(30):
     # of the classifier                                                   #
     #                                                                     #
     #######################################################################
-    accuracy = None
+
+    clf.eval()
+    if finetune:
+        encoder.eval()
+    batch_accuracies = []
+    for batch_index, (images, labels) in enumerate(testloader):
+        if cuda_available:
+            images, labels = images.cuda(), labels.cuda()
+        images, labels = Variable(images), Variable(labels)
+
+        output = encoder(images)
+        prediction = clf(output)
+
+        prediction = torch.max(prediction, 1)[1]
+        correct = prediction.long().eq(labels).sum().data[0]
+
+        batch_size = labels.size(0)
+        batch_accuracies.append(correct * (100.0 / batch_size))
+
+    accuracy = np.array(batch_accuracies).mean()
+
     #######################################################################
     #                         END OF YOUR CODE                            #
     #######################################################################
