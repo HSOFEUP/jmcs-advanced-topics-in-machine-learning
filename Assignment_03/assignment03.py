@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 
 
 # Set Hyperparameters
-noise_type = 'noise_salt_pepper'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
-finetune = True
+# noise_type = 'gaussian_add'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
+noise_types = ['gaussian_add', 'noise_salt_pepper', 'noise_masking', 'None']
+# finetune = False # see below..
 num_epochs_autoencoder = 1
-num_epochs_classifier = 30
+num_epochs_classifier = 1  # 30
 batch_size = 128
 learning_rate = 0.001
 LAYER_DIMS = [16, 8, 8]
@@ -43,13 +44,13 @@ testloader = torch.utils.data.DataLoader(dataset=mnist_test,
                                          num_workers=2,
                                          drop_last=True)
 
-# Choose 5000 examples for transfer learning
-mask = np.random.randint(0, 60000, 5000)
-finetune_loader = torch.utils.data.DataLoader(dataset=mnist_train,
-                                              batch_size=batch_size,
-                                              shuffle=False,
-                                              sampler=SubsetRandomSampler(np.where(mask)[0]),
-                                              num_workers=2)
+# # Choose 5000 examples for transfer learning
+# mask = np.random.randint(0, 60000, 5000)
+# finetune_loader = torch.utils.data.DataLoader(dataset=mnist_train,
+#                                               batch_size=batch_size,
+#                                               shuffle=False,
+#                                               sampler=SubsetRandomSampler(np.where(mask)[0]),
+#                                               num_workers=2)
 
 
 # Create Encoder and Decoder that subclasses nn.Module
@@ -238,169 +239,202 @@ def noise_masking(imgs, drop_rate=0.5, tile_size=7):
     return imgs_n
 
 
-encoder = Encoder()
-decoder = Decoder()
-if cuda_available:
-    encoder = encoder.cuda()
-    decoder = decoder.cuda()
+# Task 1: evaluate learnt model on each denoising task
+# => run entire program for each noise_type
+# => Save a png for each encoded + decoded noise
+# => Calculate accuracy of learnt model using the classifier but without finetuning (don't change learnt model)
+# Task 2: what is impact of finetuning vs fixed feature representations and how does it change with dataset size?
+# => run everything once without finetuning and once with finetuning
+# => run with 3 different transfer dataset sizes: 5000, 2500, 1000
+for finetune in [False, True]:
+    print('finetune:', finetune, '-->')
+    for transfer_dataset_size in [5000, 2500, 1000]:
+        print('transfer_dataset_size:', transfer_dataset_size, '-->')
+        # Choose transfer_dataset_size examples for transfer learning
+        mask = np.random.randint(0, 60000, transfer_dataset_size)
+        finetune_loader = torch.utils.data.DataLoader(dataset=mnist_train,
+                                              batch_size=batch_size,
+                                              shuffle=False,
+                                              sampler=SubsetRandomSampler(np.where(mask)[0]),
+                                              num_workers=2)
 
-# Define Loss and Optimizer for DAE training
-parameters = list(encoder.parameters()) + list(decoder.parameters())
-loss_func = nn.MSELoss()
-optimizer = torch.optim.Adam(parameters, lr=learning_rate)
+        for noise_type in noise_types:
+            print('run for noise type:', noise_type, '-->')
+            encoder = Encoder()
+            decoder = Decoder()
+            if cuda_available:
+                encoder = encoder.cuda()
+                decoder = decoder.cuda()
 
-# Get noise function to be applied to images
-if noise_type is 'gaussian_add':
-    image_fn = noise_additive_gaussian
-elif noise_type is 'noise_salt_pepper':
-    image_fn = noise_salt_pepper
-elif noise_type is 'noise_masking':
-    image_fn = noise_masking
-else:
-    # Default is no noise (standard AE)
-    image_fn = lambda x: x
+            # Define Loss and Optimizer for DAE training
+            parameters = list(encoder.parameters()) + list(decoder.parameters())
+            loss_func = nn.MSELoss()
+            optimizer = torch.optim.Adam(parameters, lr=learning_rate)
 
-print('--------------------------------------------------------------')
-print('---------------------- Training DAE --------------------------')
-print('--------------------------------------------------------------')
+            # Get noise function to be applied to images
+            if noise_type is 'gaussian_add':
+                image_fn = noise_additive_gaussian
+            elif noise_type is 'noise_salt_pepper':
+                image_fn = noise_salt_pepper
+            elif noise_type is 'noise_masking':
+                image_fn = noise_masking
+            else:
+                # Default is no noise (standard AE)
+                image_fn = lambda x: x
 
-# Train the Autoencoder
-for epoch in range(num_epochs_autoencoder):
-    losses = []
-    start = time.time()
-    for batch_index, (images, _) in enumerate(train_loader):
-        if cuda_available:
-            images = images.cuda()
-        images = Variable(images)
-        image_noised = image_fn(images)
+            print('--------------------------------------------------------------')
+            print('---------------------- Training DAE --------------------------')
+            print('--------------------------------------------------------------')
 
-        # Training Step
-        optimizer.zero_grad()
-        output = encoder(image_noised)
-        output = decoder(output)
-        loss = loss_func(output, images)
-        loss.backward()
-        optimizer.step()
-        losses.append(loss.data[0])
-        if batch_index % 50 == 0:
-            print('Epoch: {}, Iter: {:3d}, Loss: {:.4f}'.format(epoch, batch_index, loss.data[0]))
+            # Train the Autoencoder
+            for epoch in range(num_epochs_autoencoder):
+                losses = []
+                start = time.time()
+                for batch_index, (images, _) in enumerate(train_loader):
+                    if cuda_available:
+                        images = images.cuda()
+                    images = Variable(images)
+                    image_noised = image_fn(images)
 
-    end = time.time()
-    print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
+                    # Training Step
+                    optimizer.zero_grad()
+                    output = encoder(image_noised)
+                    output = decoder(output)
+                    loss = loss_func(output, images)
+                    loss.backward()
+                    optimizer.step()
+                    losses.append(loss.data[0])
+                    #if batch_index % 50 == 0:
+                    #    print('Epoch: {}, Iter: {:3d}, Loss: {:.4f}'.format(epoch, batch_index, loss.data[0]))
 
-# Set encoder and decoder in evaluation mode to use running means and averages for Batchnorm
-encoder.eval()
-decoder.eval()
+                end = time.time()
+                print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
 
-# Get a batch of test images
-test_imgs, test_labels = next(iter(testloader))
-if cuda_available:
-    test_imgs, test_labels = test_imgs.cuda(), test_labels.cuda()
-test_imgs, test_labels = Variable(test_imgs), Variable(test_labels)
-test_imgs_noised = image_fn(test_imgs)
+            # Set encoder and decoder in evaluation mode to use running means and averages for Batchnorm
+            encoder.eval()
+            decoder.eval()
 
-output = encoder(test_imgs_noised)
-output = decoder(output)
+            if transfer_dataset_size == 50000 and not finetune and noise_type is not 'None':
+                # save a plot only once for each noise type...
+                # Get a batch of test images
+                test_imgs, test_labels = next(iter(testloader))
+                if cuda_available:
+                    test_imgs, test_labels = test_imgs.cuda(), test_labels.cuda()
+                test_imgs, test_labels = Variable(test_imgs), Variable(test_labels)
+                test_imgs_noised = image_fn(test_imgs)
 
-# Visualize in and output of the Autoencoder
-fig_out = plt.figure('out', figsize=(10, 10))
-fig_in = plt.figure('in', figsize=(10, 10))
-for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
-    if ind > 63:
-        break
-    plt.figure('out')
-    fig_out.add_subplot(8, 8, ind + 1)
-    plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
-    plt.axis('off')
-    plt.figure('in')
-    fig_in.add_subplot(8, 8, ind + 1)
-    plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
-    plt.axis('off')
-plt.show()
+                output = encoder(test_imgs_noised)
+                output = decoder(output)
 
-print('--------------------------------------------------------------')
-print('------------------- Transfer Learning ------------------------')
-print('--------------------------------------------------------------')
+                # Visualize in and output of the Autoencoder
+                fig_out = plt.figure('out', figsize=(10, 10))
+                fig_in = plt.figure('in', figsize=(10, 10))
+                for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
+                    if ind > 15:
+                        break
+                    plt.figure('out')
+                    fig_out.add_subplot(4, 4, ind + 1)
+                    plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
+                    plt.axis('off')
+                    plt.figure('in')
+                    fig_in.add_subplot(4, 4, ind + 1)
+                    plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
+                    plt.axis('off')
+                fig_in.savefig(noise_type + '-encoded.png')
+                fig_out.savefig(noise_type + '-decoded.png')
+                #plt.show()
 
-#######################################################################
-# TODO:                                                               #
-# Prepare everything for transfer learning:                           #
-#   - Build the classifier                                            #
-#   - Define the optimizer                                            #
-#   - Define the loss function                                        #
-# Note: The setup might be different for finetuning or fixed features #
-#       (see variable finetune!)                                      #
-#                                                                     #
-#######################################################################
-clf = Classifier()
-if cuda_available:
-    clf = clf.cuda()
-if finetune:
-    parameters = list(encoder.parameters()) + list(clf.parameters())
-    encoder.train()
-else:
-    parameters = clf.parameters()
-optimizer = torch.optim.SGD(parameters, lr=learning_rate, momentum=0.9)
-loss_func = nn.CrossEntropyLoss()
+            print('--------------------------------------------------------------')
+            print('------------------- Transfer Learning ------------------------')
+            print('--------------------------------------------------------------')
 
-#######################################################################
-#                         END OF YOUR CODE                            #
-#######################################################################
+            #######################################################################
+            #                                                                #
+            # Prepare everything for transfer learning:                           #
+            #   - Build the classifier                                            #
+            #   - Define the optimizer                                            #
+            #   - Define the loss function                                        #
+            # Note: The setup might be different for finetuning or fixed features #
+            #       (see variable finetune!)                                      #
+            #                                                                     #
+            #######################################################################
+            clf = Classifier()
+            if cuda_available:
+                clf = clf.cuda()
+            if finetune:
+                parameters = list(encoder.parameters()) + list(clf.parameters())
+                encoder.train()
+            else:
+                parameters = clf.parameters()
+            optimizer = torch.optim.SGD(parameters, lr=learning_rate, momentum=0.9)
+            loss_func = nn.CrossEntropyLoss()
 
-# Train the Classifier
-for epoch in range(num_epochs_classifier):
-    losses = []
-    start = time.time()
-    for batch_index, (images, labels) in enumerate(finetune_loader):
-        if cuda_available:
-            images, labels = images.cuda(), labels.cuda()
-        images, labels = Variable(images), Variable(labels)
+            #######################################################################
+            #                         END OF YOUR CODE                            #
+            #######################################################################
 
-        # Training Step
-        optimizer.zero_grad()
-        output = encoder(images)
-        output = clf(output)
-        loss = loss_func(output, labels)
-        loss.backward()
-        optimizer.step()
-        losses.append(loss.data[0])
+            # Train the Classifier
+            best_test_accuracy = 0
+            for epoch in range(num_epochs_classifier):
+                losses = []
+                start = time.time()
+                for batch_index, (images, labels) in enumerate(finetune_loader):
+                    if cuda_available:
+                        images, labels = images.cuda(), labels.cuda()
+                    images, labels = Variable(images), Variable(labels)
 
-    end = time.time()
-    print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
+                    # Training Step
+                    optimizer.zero_grad()
+                    output = encoder(images)
+                    output = clf(output)
+                    loss = loss_func(output, labels)
+                    loss.backward()
+                    optimizer.step()
+                    losses.append(loss.data[0])
 
-    #######################################################################
-    # TODO:                                                               #
-    # Evaluate the classifier on the test set by computing the accuracy   #
-    # of the classifier                                                   #
-    #                                                                     #
-    #######################################################################
+                end = time.time()
+                print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
 
-    clf.eval()
-    if finetune:
-        encoder.eval()
-    batch_accuracies = []
-    for batch_index, (images, labels) in enumerate(testloader):
-        if cuda_available:
-            images, labels = images.cuda(), labels.cuda()
-        images, labels = Variable(images), Variable(labels)
+                #######################################################################
+                #                                                                     #
+                # Evaluate the classifier on the test set by computing the accuracy   #
+                # of the classifier                                                   #
+                #                                                                     #
+                #######################################################################
 
-        output = encoder(images)
-        prediction = clf(output)
+                clf.eval()
+                if finetune:
+                    encoder.eval()
+                batch_accuracies = []
+                for batch_index, (images, labels) in enumerate(testloader):
+                    if cuda_available:
+                        images, labels = images.cuda(), labels.cuda()
+                    images, labels = Variable(images), Variable(labels)
 
-        prediction = torch.max(prediction, 1)[1]
-        correct = prediction.long().eq(labels).sum().data[0]
+                    output = encoder(images)
+                    prediction = clf(output)
 
-        batch_size = labels.size(0)
-        batch_accuracies.append(correct * (100.0 / batch_size))
+                    prediction = torch.max(prediction, 1)[1]
+                    correct = prediction.long().eq(labels).sum().data[0]
 
-    accuracy = np.array(batch_accuracies).mean()
+                    batch_size = labels.size(0)
+                    batch_accuracies.append(correct * (100.0 / batch_size))
 
-    #######################################################################
-    #                         END OF YOUR CODE                            #
-    #######################################################################
+                accuracy = np.array(batch_accuracies).mean()
 
-    print('Epoch: {}, Test Acc: {:.4f}'.format(epoch, accuracy))
-    print('--------------------------------------------------------------')
-    clf.train()
-    if finetune:
-        encoder.train()
+                if accuracy > best_test_accuracy:
+                    best_test_accuracy = accuracy
+
+                #######################################################################
+                #                         END OF YOUR CODE                            #
+                #######################################################################
+
+                print('Epoch: {}, Test Acc: {:.4f}'.format(epoch, accuracy))
+                print('--------------------------------------------------------------')
+                clf.train()
+                if finetune:
+                    encoder.train()
+
+            print('run for noise type:', noise_type, '<-- [best test accuracy achieved:', best_test_accuracy, ']')
+        print('transfer_dataset_size:', transfer_dataset_size, '<--')
+    print('fine_tuning:', fine_tuning, '<--')
