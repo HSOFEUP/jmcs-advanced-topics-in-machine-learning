@@ -437,4 +437,4 @@ for finetune in [False, True]:
 
             print('run for noise type:', noise_type, '<-- [best test accuracy achieved:', best_test_accuracy, ']')
         print('transfer_dataset_size:', transfer_dataset_size, '<--')
-    print('fine_tuning:', fine_tuning, '<--')
+    print('finetune:', finetune, '<--')
