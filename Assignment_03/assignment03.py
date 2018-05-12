@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 # Set Hyperparameters
 noise_type = 'noise_salt_pepper'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
 finetune = True
-num_epochs = 1
+num_epochs_autoencoder = 1
+num_epochs_classifier = 30
 batch_size = 128
 learning_rate = 0.001
 LAYER_DIMS = [16, 8, 8]
@@ -264,7 +265,7 @@ print('---------------------- Training DAE --------------------------')
 print('--------------------------------------------------------------')
 
 # Train the Autoencoder
-for epoch in range(num_epochs):
+for epoch in range(num_epochs_autoencoder):
     losses = []
     start = time.time()
     for batch_index, (images, _) in enumerate(train_loader):
@@ -302,20 +303,20 @@ output = encoder(test_imgs_noised)
 output = decoder(output)
 
 # Visualize in and output of the Autoencoder
-# fig_out = plt.figure('out', figsize=(10, 10))
-# fig_in = plt.figure('in', figsize=(10, 10))
-# for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
-#     if ind > 63:
-#         break
-#     plt.figure('out')
-#     fig_out.add_subplot(8, 8, ind + 1)
-#     plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
-#     plt.axis('off')
-#     plt.figure('in')
-#     fig_in.add_subplot(8, 8, ind + 1)
-#     plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
-#     plt.axis('off')
-# plt.show()
+fig_out = plt.figure('out', figsize=(10, 10))
+fig_in = plt.figure('in', figsize=(10, 10))
+for ind, (img_out, img_in) in enumerate(zip(output, test_imgs_noised)):
+    if ind > 63:
+        break
+    plt.figure('out')
+    fig_out.add_subplot(8, 8, ind + 1)
+    plt.imshow(img_out.data.cpu().numpy().reshape(28, 28), cmap='gray')
+    plt.axis('off')
+    plt.figure('in')
+    fig_in.add_subplot(8, 8, ind + 1)
+    plt.imshow(img_in.data.cpu().numpy().reshape(28, 28), cmap='gray')
+    plt.axis('off')
+plt.show()
 
 print('--------------------------------------------------------------')
 print('------------------- Transfer Learning ------------------------')
@@ -347,7 +348,7 @@ loss_func = nn.CrossEntropyLoss()
 #######################################################################
 
 # Train the Classifier
-for epoch in range(30):
+for epoch in range(num_epochs_classifier):
     losses = []
     start = time.time()
     for batch_index, (images, labels) in enumerate(finetune_loader):
