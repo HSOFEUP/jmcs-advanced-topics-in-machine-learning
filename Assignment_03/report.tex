@@ -1,0 +1,198 @@
+% #######################################
+% ########### FILL THESE IN #############
+% #######################################
+\def\mytitle{ATML Assignment 03 Report}
+\def\mykeywords{ATML, report, assignment 3, VAE, DAE, finetuning, transfer}
+\def\myauthor{Lukas Zbinden}
+\def\contact{lukas.zbinden@unifr.ch}
+\def\mymodule{ATML, Spring 2018}
+% #######################################
+% #### YOU DON'T NEED TO TOUCH BELOW ####
+% #######################################
+\documentclass[10pt, a4paper]{article}
+\usepackage[a4paper,outer=1.5cm,inner=1.5cm,top=1.75cm,bottom=1.5cm]{geometry}
+\twocolumn
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+%colour our links, remove weird boxes
+\usepackage[colorlinks,linkcolor={black},citecolor={blue!80!black},urlcolor={blue!80!black}]{hyperref}
+%Stop indentation on new paragraphs
+\usepackage[parfill]{parskip}
+%% Arial-like font
+\usepackage{lmodern}
+\renewcommand*\familydefault{\sfdefault}
+%Napier logo top right
+\usepackage{watermark}
+%Lorem Ipusm dolor please don't leave any in you final report ;)
+\usepackage{lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+%give us the Capital H that we all know and love
+\usepackage{float}
+%tone down the line spacing after section titles
+\usepackage{titlesec}
+%Cool maths printing
+\usepackage{amsmath}
+%PseudoCode
+\usepackage{algorithm2e}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\titlespacing{\subsection}{0pt}{\parskip}{-3pt}
+\titlespacing{\subsubsection}{0pt}{\parskip}{-\parskip}
+\titlespacing{\paragraph}{0pt}{\parskip}{\parskip}
+\newcommand{\figuremacro}[5]{
+    \begin{figure}[#1]
+        \centering
+        \includegraphics[width=#5\columnwidth]{#2}
+        \caption[#3]{\textbf{#3}#4}
+        \label{fig:#2}
+    \end{figure}
+}
+
+\lstset{
+	escapeinside={/*@}{@*/}, language=C++,
+	basicstyle=\fontsize{8.5}{12}\selectfont,
+	numbers=left,numbersep=2pt,xleftmargin=2pt,frame=tb,
+    columns=fullflexible,showstringspaces=false,tabsize=4,
+    keepspaces=true,showtabs=false,showspaces=false,
+    backgroundcolor=\color{white}, morekeywords={inline,public,
+    class,private,protected,struct},captionpos=t,lineskip=-0.4em,
+	aboveskip=10pt, extendedchars=true, breaklines=true,
+	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+	keywordstyle=\color[rgb]{0,0,1},
+	commentstyle=\color[rgb]{0.133,0.545,0.133},
+	stringstyle=\color[rgb]{0.627,0.126,0.941}
+}
+
+%\thiswatermark{\centering %\put(336.5,-38.0){\includegraphics[scale=0.8]{logo}} }
+\title{\mytitle}
+\author{\myauthor\hspace{1em}\\\contact\\University of Bern\hspace{0.5em}-\hspace{0.5em}\mymodule}
+\date{}
+\hypersetup{pdfauthor=\myauthor,pdftitle=\mytitle,pdfkeywords=\mykeywords}
+\sloppy
+% #######################################
+% ########### START FROM HERE ###########
+% #######################################
+\begin{document}
+	\maketitle
+    
+	\section{DAE}
+    \subsection{Evaluation of 3 denoising tasks}
+    Table \ref{table:ta} depicts the best test accuracy for each of the three denoising autoencoders for the cases of fixed feature representation and finetuning. 
+    TODO babble some more here...
+    
+    \begin{table}
+    \begin{center}
+    \begin{tabular}{|l|c|c|}
+    \hline
+    DAE type & Fixed & Finetuning \\
+    \hline\hline
+    Additive Gaussian & 27.1 & 30.9 \\
+    Salt and Pepper & 26.5 & 39.2 \\
+    Masking & \textbf{29.6} & \textbf{41.1} \\
+    None & 29.0 & 35.7 \\
+    \hline
+    \end{tabular}
+    \end{center}
+    \caption{Best test accuracy of each DAE for fixed transfer learning and finetuning (with 1 epoch and a transfer dataset size of 5000).}
+    \label{table:ta}
+    \end{table}
+    
+    \subsection{Sample Reconstructions vs. Inputs}
+    \subsubsection{Additive Gaussian noise}
+    Figure \ref{fig:figag} depicts samples of additive Gaussian noise along with the reconstructions.
+    
+    \begin{figure}[h]
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/gaussian_add-encoded.png} 
+    \caption{Encoder output}
+    \label{fig:subim1}
+    \end{subfigure}
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/gaussian_add-decoded.png}
+    \caption{Decoder output}
+    \label{fig:subim2}
+    \end{subfigure}
+    \caption{Additive Gaussian noise samples and their respective reconstructions}
+    \label{fig:figag}
+    \end{figure}
+    
+    \subsubsection{Salt \& Pepper noise}
+    Figure \ref{fig:figsp} depicts samples of Salt \& Pepper noise along with their reconstructions.
+    
+    \begin{figure}[h]
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/noise_salt_pepper-encoded.png} 
+    \caption{Encoder output}
+    \label{fig:subim1}
+    \end{subfigure}
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/noise_salt_pepper-decoded.png}
+    \caption{Decoder output}
+    \label{fig:subim2}
+    \end{subfigure}
+    \caption{Salt \& Pepper samples and their reconstructions}
+    \label{fig:figsp}
+    \end{figure}
+    
+    \subsubsection{Masking noise}
+    Figure \ref{fig:figma} depicts samples of Masking noise along with their respective reconstructions.
+    
+    \begin{figure}[h]
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/noise_masking-encoded.png} 
+    \caption{Encoder output}
+    \label{fig:subim1}
+    \end{subfigure}
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=1.0\linewidth]{images/noise_masking-decoded.png}
+    \caption{Decoder output}
+    \label{fig:subim2}
+    \end{subfigure}
+    \caption{Masking samples and their reconstructions}
+    \label{fig:figma}
+    \end{figure}    
+    
+    \subsection{Which forms of noise are challenging or easy? Why?}
+    Masking noise appears to be the most challenging as some of the images are perturbated to a degree to which the number becomes unrecognizable to the human eye. Also some of the respective reconstructions remain unclear what number they represent. So the decoder is challenged the most to reconstruct the image and in inpainting the missing regions, respectively.\newline
+    Also challenging but to a lesser degree seems the Salt \& Pepper noise as it basically erases the original image pixel wise at some rate. However the reconstructions seem better recognizable. Lastly the additive Gaussian noise I consider the least distorting from considering the encoder output and the reconstructions, respectively. It is most likely the easiest for the DAE to reconstruct as the pixel values are not erased completely but only changed according to a normal distribution.\newline
+    The more challenging a noise is to the DAE the more it is forced to learn the correct reconstruction of the original images and ultimately the better it's performance will be. This consideration should be reflected in table \ref{table:ta}.
+    
+	
+	\section{Transfer Learning}
+	Some common formatting you may need uses these commands for \textbf{Bold Text}, \textit{Italics}, and \underline{underlined}.
+	\subsection{LineBreaks}
+	Here is a line
+    
+    Here is a line followed by a double line break.
+	This line is only one line break down from the above, Notice that latex can ignore this
+    
+    We can force a break \\ with the break operator.
+    
+	\subsection{Maths}
+    Embedding Maths is Latex's bread and butter    
+    
+    {\centering \Large \(
+        J = \begin{bmatrix}
+            \frac{\delta e}{\delta \theta _0}
+            \frac{\delta e}{\delta \theta _1}
+            \frac{\delta e}{\delta \theta _2}
+        \end{bmatrix}
+        = e_{current} - e_{target} 
+    \)\par}
+	
+	\subsection{Code Listing}
+    You can load segments of code from a file, or embed them directly.
+    
+
+    
+\subsection{PseudoCode}
+
+
+	
+\section{Conclusion}	
+\bibliographystyle{ieeetr}
+\bibliography{references}
+		
+\end{document}
