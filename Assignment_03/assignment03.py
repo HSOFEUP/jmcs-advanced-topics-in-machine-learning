@@ -7,6 +7,8 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
+# import matplotlib
+# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 
@@ -14,8 +16,8 @@ import matplotlib.pyplot as plt
 # noise_type = 'gaussian_add'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
 noise_types = ['gaussian_add', 'noise_salt_pepper', 'noise_masking', 'None']
 # finetune = False # see below..
-num_epochs_autoencoder = 1
-num_epochs_classifier = 1  # 30
+num_epochs_autoencoder = 10
+num_epochs_classifier = 10  # 30
 batch_size = 128
 learning_rate = 0.001
 LAYER_DIMS = [16, 8, 8]
@@ -314,7 +316,7 @@ for finetune in [False, True]:
             encoder.eval()
             decoder.eval()
 
-            if transfer_dataset_size == 50000 and not finetune and noise_type is not 'None':
+            if transfer_dataset_size == 5000 and not finetune and noise_type is not 'None':
                 # save a plot only once for each noise type...
                 # Get a batch of test images
                 test_imgs, test_labels = next(iter(testloader))
@@ -437,4 +439,4 @@ for finetune in [False, True]:
 
             print('run for noise type:', noise_type, '<-- [best test accuracy achieved:', best_test_accuracy, ']')
         print('transfer_dataset_size:', transfer_dataset_size, '<--')
-    print('fine_tuning:', fine_tuning, '<--')
+    print('finetune:', finetune, '<--')
