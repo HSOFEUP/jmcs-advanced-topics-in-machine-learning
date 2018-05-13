@@ -79,23 +79,23 @@
     
 	\section{DAE}
     \subsection{Evaluation of 3 denoising tasks}
-    Table \ref{table:ta} depicts the best test accuracy for each of the three denoising autoencoders for the cases of fixed feature representation and finetuning. 
+    Table \ref{table:ta} depicts the best test accuracy for each of the three denoising autoencoders for the cases of fixed feature representation and finetuning. The numbers were achieved with 2 training epochs for the DAE and 7 epochs for the classifier, respectively, and a transfer dataset size of 5000.
     TODO babble some more here...
     
-    \begin{table}
+    \begin{table}[h]
     \begin{center}
     \begin{tabular}{|l|c|c|}
     \hline
     DAE type & Fixed & Finetuning \\
     \hline\hline
-    Additive Gaussian & 27.1 & 30.9 \\
-    Salt and Pepper & 26.5 & 39.2 \\
-    Masking & \textbf{29.6} & \textbf{41.1} \\
-    None & 29.0 & 35.7 \\
+    None & 68.6 & 85.7 \\
+    Additive Gaussian & 67.8 & 87.9 \\
+    Salt and Pepper & \textbf{73.0} & 88.3 \\
+    Masking & 72.2 & \textbf{88.7} \\
     \hline
     \end{tabular}
     \end{center}
-    \caption{Best test accuracy of each DAE for fixed transfer learning and finetuning (with 1 epoch and a transfer dataset size of 5000).}
+    \caption{Test accuracy for each type of DAE}
     \label{table:ta}
     \end{table}
     
@@ -162,13 +162,17 @@
 	
 	\section{Transfer Learning}
 	Some common formatting you may need uses these commands for \textbf{Bold Text}, \textit{Italics}, and \underline{underlined}.
-	\subsection{LineBreaks}
-	Here is a line
+	
+	\subsection{Transfer Performance}
+    TODO evaluate transfer performance of 3 different DAEs\\
+    TODO Which type of noise results in the best features?\\
+    TODO How do the features compare to features of a standard Autoencoder?
     
-    Here is a line followed by a double line break.
-	This line is only one line break down from the above, Notice that latex can ignore this
+    \subsection{Impact of dataset size on performance of finetuning vs. fixed feature representation}
+    TODO What is the impact of finetuning vs. fixed feature representations and how does this change with the dataset size?\\
+	\\
+	TODO insert table (and plot) here
     
-    We can force a break \\ with the break operator.
     
 	\subsection{Maths}
     Embedding Maths is Latex's bread and butter    
