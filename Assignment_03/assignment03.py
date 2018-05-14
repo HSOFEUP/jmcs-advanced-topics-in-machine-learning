@@ -249,9 +249,9 @@ def noise_masking(imgs, drop_rate=0.5, tile_size=7):
 # => run everything once without finetuning and once with finetuning
 # => run with 3 different transfer dataset sizes: 5000, 2500, 1000
 for finetune in [False, True]:
-    print('finetune:', finetune, '-->')
+    # print('finetune:', finetune, '-->')
     for transfer_dataset_size in [5000, 2500, 1000]:
-        print('transfer_dataset_size:', transfer_dataset_size, '-->')
+        # print('transfer_dataset_size:', transfer_dataset_size, '-->')
         # Choose transfer_dataset_size examples for transfer learning
         mask = np.random.randint(0, 60000, transfer_dataset_size)
         finetune_loader = torch.utils.data.DataLoader(dataset=mnist_train,
@@ -261,7 +261,7 @@ for finetune in [False, True]:
                                               num_workers=2)
 
         for noise_type in noise_types:
-            print('run for noise type:', noise_type, '-->')
+            # print('run for noise type:', noise_type, '-->')
             encoder = Encoder()
             decoder = Decoder()
             if cuda_available:
@@ -284,9 +284,9 @@ for finetune in [False, True]:
                 # Default is no noise (standard AE)
                 image_fn = lambda x: x
 
-            print('--------------------------------------------------------------')
-            print('---------------------- Training DAE --------------------------')
-            print('--------------------------------------------------------------')
+            # print('--------------------------------------------------------------')
+            # print('---------------------- Training DAE --------------------------')
+            # print('--------------------------------------------------------------')
 
             # Train the Autoencoder
             for epoch in range(num_epochs_autoencoder):
@@ -310,7 +310,7 @@ for finetune in [False, True]:
                     #    print('Epoch: {}, Iter: {:3d}, Loss: {:.4f}'.format(epoch, batch_index, loss.data[0]))
 
                 end = time.time()
-                print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
+                # print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
 
             # Set encoder and decoder in evaluation mode to use running means and averages for Batchnorm
             encoder.eval()
@@ -346,9 +346,9 @@ for finetune in [False, True]:
                 fig_out.savefig(noise_type + '-decoded.png')
                 #plt.show()
 
-            print('--------------------------------------------------------------')
-            print('------------------- Transfer Learning ------------------------')
-            print('--------------------------------------------------------------')
+            # print('--------------------------------------------------------------')
+            # print('------------------- Transfer Learning ------------------------')
+            # print('--------------------------------------------------------------')
 
             #######################################################################
             #                                                                #
@@ -395,7 +395,7 @@ for finetune in [False, True]:
                     losses.append(loss.data[0])
 
                 end = time.time()
-                print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
+                # print('Epoch: {}, Average Loss: {:.4f}, Time: {:.4f}'.format(epoch, np.mean(losses), end - start))
 
                 #######################################################################
                 #                                                                     #
@@ -431,12 +431,12 @@ for finetune in [False, True]:
                 #                         END OF YOUR CODE                            #
                 #######################################################################
 
-                print('Epoch: {}, Test Acc: {:.4f}'.format(epoch, accuracy))
-                print('--------------------------------------------------------------')
+                # print('Epoch: {}, Test Acc: {:.4f}'.format(epoch, accuracy))
+                # print('--------------------------------------------------------------')
                 clf.train()
                 if finetune:
                     encoder.train()
 
-            print('run for noise type:', noise_type, '<-- [best test accuracy achieved:', best_test_accuracy, ']')
-        print('transfer_dataset_size:', transfer_dataset_size, '<--')
-    print('finetune:', finetune, '<--')
+            # print('run for noise type:', noise_type, '<-- [best test accuracy achieved:', best_test_accuracy, ']')
+        # print('transfer_dataset_size:', transfer_dataset_size, '<--')
+    # print('finetune:', finetune, '<--')
