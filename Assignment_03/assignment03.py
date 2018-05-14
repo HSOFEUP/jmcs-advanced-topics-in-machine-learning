@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 # noise_type = 'gaussian_add'  # Possible values: 'gaussian_add', 'noise_salt_pepper', 'noise_masking' or None
 noise_types = ['gaussian_add', 'noise_salt_pepper', 'noise_masking', 'None']
 # finetune = False # see below..
-num_epochs_autoencoder = 10
-num_epochs_classifier = 10  # 30
+num_epochs_autoencoder = 2  # 10
+num_epochs_classifier = 7  # 30
 batch_size = 128
 learning_rate = 0.001
 LAYER_DIMS = [16, 8, 8]
