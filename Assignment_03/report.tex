@@ -79,10 +79,11 @@
 \begin{document}
 	\maketitle
     
-	\section{DAE}
+	\section{Denoising Autoencoder}
+	We train and evaluate the performance of different denoising autoencoders (DAE) based on three noise data augmentation techniques, namely additive Gaussian noise, Salt \& Pepper noise and masking noise, respectively.
+	
     \subsection{Evaluation of 3 denoising tasks}
-    Table \ref{table:ta} depicts the best test accuracy for each of the three denoising autoencoders for the cases of fixed feature representation and finetuning. The numbers were achieved with 2 training epochs for the DAE and 7 epochs for the classifier (due to time constraints), respectively, and a transfer dataset size of 5000.
-    TODO babble some more here...
+    Table \ref{table:ta} depicts the best test accuracy for each of the three denoising autoencoders for the cases of fixed feature representation and finetuning. The numbers were achieved with 2 training epochs for the DAE and 7 epochs for the classifier (due to time constraints), respectively, and a transfer dataset size of 5000, on which the classifier was trained. The finetuned model trained on masked image data outperforms the others. However for the fixed DAEs the Salt \& Pepper noise originates the most challening training data such that 'its' DAE performs best. In all but one case the DAE outperform the standard autoencoder, based on which we can conclude that the noise data augmentation technique is effective in creating a more performant model.
     
     \begin{table}[h]
     \begin{center}
@@ -92,7 +93,7 @@
     \hline\hline
     None & 68.6 & 85.7 \\
     Additive Gaussian & 67.8 & 87.9 \\
-    Salt and Pepper & \textbf{73.0} & 88.3 \\
+    Salt \& Pepper & \textbf{73.0} & 88.3 \\
     Masking & 72.2 & \textbf{88.7} \\
     \hline
     \end{tabular}
@@ -102,6 +103,8 @@
     \end{table}
     
     \subsection{Sample Reconstructions vs. Inputs}
+    Following we show sample noisy inputs along with their reconstructions as they are output by the DAE's decoder.
+    
     \subsubsection{Additive Gaussian noise}
     Figure \ref{fig:figag} depicts samples of additive Gaussian noise along with the reconstructions.
     
@@ -163,17 +166,9 @@
     
 	
 	\section{Transfer Learning}
-	Some common formatting you may need uses these commands for \textbf{Bold Text}, \textit{Italics}, and \underline{underlined}.
+	Here we evaluate the quality of learnt representations in transfer learning experiments for classification based on the MNIST dataset.
 	
-	\subsection{Transfer Performance}
-    TODO evaluate transfer performance of 3 different DAEs\\
-    TODO Which type of noise results in the best features?\\
-    TODO How do the features compare to features of a standard Autoencoder?
-    
-    \subsection{Impact of dataset size on performance of finetuning vs. fixed feature representation}
-    What is the impact of finetuning vs. fixed feature representations and how does this change with the dataset size?
-	
-    \begin{table*}[h]
+	\begin{table}[b]
     \centering
     \begin{tabular}{|l||c||c|c|c|c||c|}
     \hline
@@ -188,34 +183,30 @@
     & \textbf{5000} & 87.9 & 88.3 & 88.7 & 85.7 & \textbf{87.7} \\
     \hline
     \end{tabular}
-    \caption{Impact of dataset size on transfer performance}
+    \caption{Transfer performance of four DAEs for different transfer dataset sizes and two transfer types. The last column shows the average test accuracy across the four DAEs.}
     \label{table:imfidasi}
-    \end{table*}    
-    
-    
-	\subsection{Maths}
-    Embedding Maths is Latex's bread and butter    
-    
-    {\centering \Large \(
-        J = \begin{bmatrix}
-            \frac{\delta e}{\delta \theta _0}
-            \frac{\delta e}{\delta \theta _1}
-            \frac{\delta e}{\delta \theta _2}
-        \end{bmatrix}
-        = e_{current} - e_{target} 
-    \)\par}
+    \end{table}  
 	
-	\subsection{Code Listing}
-    You can load segments of code from a file, or embed them directly.
-    
-
-    
-\subsection{PseudoCode}
-
-
+	\subsection{Transfer Performance}
+	Table \ref{table:imfidasi} shows the transfer performance for two transfer types: 'fixed feature' in which the trained encoder is fixed for the training of the classifier and 'finetuning' in which the trained encoder is continued to be trained when training the classifier (i.e. the new task). For each type, the performances are collected for different transfer dataset sizes, i.e. the dataset used to train the classifier (and in case of 'finetuning' als the encoder), and finally for each of the four DAEs. The last column then shows the average test accuracy across the latter. It stands out that the average performance in the finetuning case is much better than in the fixed case. 
 	
-\section{Conclusion}	
-\bibliographystyle{ieeetr}
-\bibliography{references}
-		
+	\subsubsection{Type of noise to yield the best features}
+	The best features are achieved by the masking DAE and finetuning transfer with a 88.7\% accuracy. Yet all noise types achieve comparable best results for the largest transfer dataset size with 'finetuning' whereas they differ more substantially as the dataset decreases. 
+	
+	\subsubsection{Comparing the features to features of a standard autoencoder}
+    The performance of the standard AE improves with increasing dataset size in a similar fashion as the DAEs do. The standard AE delivers in no case the very best results, however some numbers are very close to the highest. In general the DAEs, in particular those based on S \& P and masking noises, outperform the standard AE especially as the dataset size increases.
+    
+    \subsection{Impact of dataset size on performance of finetuning vs. fixed feature representation}
+    Figure \ref{fig:diagfine} depicts the impact of the transfer dataset size (i.e. on which the classifer is learnt) on the performance of both finetuning and fixed feature representation transfer learning. It shows that finetuning outperforms the fixed variant with respect to all sizes and further continues to deliver results in an almost linear way whereas the fixed representation drops its performance when the dataset gets much bigger with a size of 5000. 
+    
+    \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/finetune_diag.png}
+    \caption{Impact of dataset size on transfer learning type}
+    \label{fig:diagfine}
+    \end{figure}
+	
+	\section{Conclusion}
+	The experiments show that using noise as a form of data augmentation yields notable improvements over the standard dataset as the autoencoders are forced to learn to process harder training examples and thus develop more elaborate feature representations. Further, the experiments demonstrate that transfer learning is a complementary and also effective technique to improve the performance of autoencoders especially in the case of finetuning. Transfer learning is complementary because in the combination of the two techniques lies the best performance as seen in the case of masking and S \& P noise, respectively.
+	
 \end{document}
