@@ -43,61 +43,47 @@ ATML course, University of Bern, Spring 2018\\
 %-------------------------------------------------------------------------
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-   Our project aimed at improving existing networks as well as exploring new ideas such as transfer learning for the prediction of the age based on hand X-rays (\cite{kaggleboneage}).
+   Our project aimed at improving existing networks as well as exploring new ideas such as transfer learning for the prediction of the age based on hand X-rays (\cite{kaggleboneage}, \cite{stanfordboneage}).
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-
-motivation, overview of the idea, contributions
+In 2017 the Radiological Society of North America (RSNA) published a pediatric bone age prediction challenge (\cite{rsnacompetition}) that asked the ML community to develop an algorithm that most accurately determines skeletal age on a validation set of pediatric hand radiographs. The competition was won by \cite{16bitrsnachallenge} with a mean absolute difference (MAD) of 4.265 months. Following that, \cite{kaggleboneage} published the bone age data set on kaggle.com along with a strong baseline algorithm for further exploration and research. That is where we as group 3 stepped in to pick up this baseline with new ideas and unprecedented experiments.\\ We focused on three areas, namely the impact of different image preprocessing techniques, transfer learning with a different dataset and the use of different architectures, respectively, on the prediction task.
 
 %-------------------------------------------------------------------------
-\section{Prior work}
-
-All manuscripts must be in English.
-
-\begin{figure}[t]
-\begin{center}
-\fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
-   %\includegraphics[width=0.8\linewidth]{egfigure.eps}
-\end{center}
-   \caption{Example of caption.  It is set in Roman so that mathematics
-   (always set in Roman: $B \sin A = A \sin B$) may be included without an
-   ugly clash.}
-\label{fig:long}
-\label{fig:onecol}
-\end{figure}
-
-\subsection{Miscellaneous}
-asdfasdjfkhalkjh lkjh erlqk hlkj hsdlfkjh 
-
-\begin{figure*}
-\begin{center}
-\fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
-\end{center}
-   \caption{Example of a short caption, which should be centered.}
-\label{fig:short}
-\end{figure*}
+\section{Related work}
+We mainly focused on the work in \cite{kaggleboneage} and Kevin Mader, respectively, which we used as a baseline for our experiments. Further, we attempted to rebuild the competition winner's model according to \cite{16bitrsnachallenge} which we also used as a reference for our experiments. The techniques we applied in our work, such as data augmentation, in particular histogram equalization, as well as transfer learning are all based on contributions by the ML research community (e.g. \cite{1411.1792}, ...).
 
 %------------------------------------------------------------------------
-\section{Method description}
+\section{Our methods}
 
-All text must be in a two-column format. The total allowable width of the
-text area is $6\frac78$ inches (17.5 cm) wide by $8\frac78$ inches (22.54
-cm) high. Columns are to be $3\frac14$ inches (8.25 cm) wide, with a
-$\frac{5}{16}$ inch (0.8 cm) space between them. The main title (on the
-first page) should begin 1.0 inch (2.54 cm) from the top edge of the
-page. The second and following pages should begin 1.0 inch (2.54 cm) from
-the top edge. On all pages, the bottom margin should be 1-1/8 inches (2.86
-cm) from the bottom edge of the page for $8.5 \times 11$-inch paper; for A4
-paper, approximately 1-5/8 inches (4.13 cm) from the bottom edge of the
-page.
+\subsection{Image preprocessing}
+
+\subsection{Challenging the 16bit competition winner}
+One approach was to rebuild the winner's model of the 2017 RSNA ML challenge as close as possible according \cite{16bitrsnachallenge}.
+
+\subsection{Transfer learning}
+One approach was to use the large NIH chest X-rays data set with more than 112k images (\cite{nihchestxray}). 
+To the best of our knowledge this had not been attempted before which was also confirmed by Kevin Mader.
+
+
 
 %-------------------------------------------------------------------------
 \section{Experiments}
+Keras
+GPU node03 server
+values for hyperparameters
 
-Please refer to the author guidelines on the CVPR 2018 web page for a discussion
-of the use of color in your document.
+\subsection{Datasets}
+
+\subsection{Image preprocessing}
+
+\subsection{Hyperparameter tuning}
+As is stated in \cite{1802.09596} ...
+
+\subsection{Comparison to baseline}
+
+\subsection{Analysis of results}
 
 %------------------------------------------------------------------------
 \section{Conclusions}
