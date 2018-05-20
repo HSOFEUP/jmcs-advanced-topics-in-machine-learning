@@ -6,6 +6,8 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage[backend=bibtex,
 style=numeric,
 bibencoding=ascii
@@ -43,58 +45,236 @@ ATML course, University of Bern, Spring 2018\\
 %-------------------------------------------------------------------------
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-   Our project aimed at improving existing networks as well as exploring new ideas such as transfer learning for the prediction of the age based on hand X-rays (\cite{kaggleboneage}, \cite{stanfordboneage}).
+   Our project took on the challenge of skeletal age prediction based on pediatric hand X-rays. We aimed at improving existing baselines by enhancing them with techniques including image preprocessing, transfer learning using a dataset from a different domain and the use of different architectures, respectively, and then analyzing the impact of each approach on the prediction performance.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-In 2017 the Radiological Society of North America (RSNA) published a pediatric bone age prediction challenge (\cite{rsnacompetition}) that asked the ML community to develop an algorithm that most accurately determines skeletal age on a validation set of pediatric hand radiographs. The competition was won by \cite{16bitrsnachallenge} with a mean absolute difference (MAD) of 4.265 months. Following that, \cite{kaggleboneage} published the bone age data set on kaggle.com along with a strong baseline algorithm for further exploration and research. That is where we as group 3 stepped in to pick up this baseline with new ideas and unprecedented experiments.\\ We focused on three areas, namely the impact of different image preprocessing techniques, transfer learning with a different dataset and the use of different architectures, respectively, on the prediction task.
+In 2017 the Radiological Society of North America (RSNA) published a pediatric bone age prediction challenge (\cite{rsnacompetition}) that asked the ML community to develop an algorithm that most accurately determines skeletal age on a validation set of pediatric hand radiographs. The competition was won by \cite{16bitrsnachallenge} with a mean absolute difference (MAD) of 4.265 months. Following that, \cite{kaggleboneage} published the bone age data set on kaggle.com along with a strong baseline algorithm for further exploration and research. That is where we as group 3 stepped in to pick up this baseline along with new ideas and unprecedented experiments.\\ We focused on three areas, namely the impact of different image preprocessing techniques, transfer learning with a different dataset and the use of different architectures, respectively, on the prediction task.
 
 %-------------------------------------------------------------------------
 \section{Related work}
-We mainly focused on the work in \cite{kaggleboneage} and Kevin Mader, respectively, which we used as a baseline for our experiments. Further, we attempted to rebuild the competition winner's model according to \cite{16bitrsnachallenge} which we also used as a reference for our experiments. The techniques we applied in our work, such as data augmentation, in particular histogram equalization, as well as transfer learning are all based on contributions by the ML research community (e.g. \cite{1411.1792}, ...).
+We mainly focused on the work in \cite{kaggleboneage} and Kevin Mader, respectively, which we used as the baseline for our experiments. Further, we attempted to rebuild the competition winner's model according to \cite{16bitrsnachallenge} which we also used as a reference for our experiments. The techniques we applied in our work, such as data augmentation, in particular histogram equalization, as well as transfer learning are all based on contributions by the ML research community (e.g. \cite{1411.1792}, ...). \\
+Fundamental to our work were two sets of images, namely the Stanford medicine bone age dataset (\cite{stanfordboneage}) as the target for the prediction task and the large NIH chest dataset (\cite{nihchestxray}) for experiments. See figure \ref{fig:imgdss}.
+
+\begin{figure}[h]
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/sample_boneage.png} 
+\caption{Stanford bone age}
+\label{fig:subim1}
+\end{subfigure}
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/sample_chest.png}
+\caption{NIH chest}
+\label{fig:subim2}
+\end{subfigure}
+\caption{Dataset samples}
+\label{fig:imgdss}
+\end{figure}
+
 
 %------------------------------------------------------------------------
 \section{Our methods}
+We proposed a set of methods to apply and experiment with over the baseline and study the impact on the prediction performance.
 
 \subsection{Image preprocessing}
+The idea was to preprocess the bone age images in various ways the programming framework would support in order to augment the dataset for better training. Further we wanted to explore the effects of using image histogram equalization with the idea that increased contrast would lead to increased details and therefore a more valuable image for the training process.
 
-\subsection{Challenging the 16bit competition winner}
-One approach was to rebuild the winner's model of the 2017 RSNA ML challenge as close as possible according \cite{16bitrsnachallenge}.
+\subsection{Rebuilding the 16bit competition winner}
+One approach was to rebuild the winner's model of the 2017 RSNA ML 
+challenge as close as possible according to \cite{16bitrsnachallenge} which uses the \verb+InceptionV3+ architecture. And then use that model as a starting point for our experiments.
+
+\subsection{Use of different architectures}
+Additionally, an idea was to apply an array of different architectures to the model in \cite{16bitrsnachallenge} and replace their architecture choice of \verb+InceptionV3+, respectively.
 
 \subsection{Transfer learning}
-One approach was to use the large NIH chest X-rays data set with more than 112k images (\cite{nihchestxray}). 
-To the best of our knowledge this had not been attempted before which was also confirmed by Kevin Mader.
+One approach was to train the model on the large NIH chest X-rays data set and then to transfer the weights to the model for bone age prediction on the much smaller Stanford bone age dataset. 
+To the best of our knowledge this had not been attempted before which was also confirmed by Kevin Mader. We devised an array of experiments listed in table \ref{table:taexp}.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+Nr & Experiment \\
+\hline\hline
+1 & Validate chest X-rays against disease or age \\
+2 & Only chest samples within bone age range \\
+3 & Use different number of fixed model layers \\
+4 & Difference if model pretrained on ImageNet \\
+5 & Does adding gender as input improve the result? \\
+6 & Regression vs. Classification on age \\
+7 & Pretrain baseline \cite{kaggleboneage} with NIH chest dataset \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Devised transfer learning experiments}
+\label{table:taexp}
+\end{table}
+
 
 
 
 %-------------------------------------------------------------------------
 \section{Experiments}
-Keras
-GPU node03 server
-values for hyperparameters
+We evaluated the effects of our proposed methods.
+
+\subsection{Implementation details}
+All models were trained using Keras \cite{keras} on 1
+GPU on node03 server for 5 epochs (due to time restrictions and contention between three team members). The learning rate was constant until it reached a plateau where it was decreased by a factor of 0.8. We used an initial learning rate of 0.001 to train the models and a default image size of 299x299, the Adam optimizer for default model training and the SGD optimizer for the finetuning. As mostly deep models were used, we repeatedly faced problems with \verb+ResourceExhaustedError+ and had to rethink our way of running the programs. Table lists the different Python programs we developed in the course of this project.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Name & Purpose \\
+\hline\hline
+\verb+RSNABaseline.py+ & Baseline reused from \cite{kaggleboneage}  \\
+\verb+RSNA_Bl_ImagePP.py+ & Image preprocessing \\
+\verb+RSNA_Bl_ImageSelect.py+ & Image preprocessing \\
+\verb+RSNA16BitNetServer.py+ & our attempt to rebuild \cite{16bitrsnachallenge} \\
+\verb+transfer_learning.py+ & base experiments \\
+\verb+tl_RSNABaseline.py+ & cf. table \ref{table:taexp} nr. 7  \\
+\verb+exp_age_range.py+ & cf. table \ref{table:taexp} nr. 2 \\
+\verb+exp_classification.py+ & cf. table \ref{table:taexp} nr. 6 \\
+\verb+exp_disease.py+ & cf. table \ref{table:taexp} nr. 1 \\
+\verb+exp_freezed_layers.py+ & cf. table \ref{table:taexp} nr. 3 \\
+\verb+exp_gender.py+ & cf. table \ref{table:taexp} nr. 5 \\
+\verb+exp_pretrained.py+ & cf. table \ref{table:taexp} nr. 4 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Developed programs}
+\label{table:taexp}
+\end{table}
 
 \subsection{Datasets}
+As mentioned earlier, where not stated otherwise, we used the Stanford medicine bone age dataset \cite{stanfordboneage} to run our experiments and additionally for the transfer learning tests we used the NIH chest dataset \cite{nihchestxray} with a total of 112,120 images. The partitioning of the boneage dataset is 12,612 images for the training set, 1,426 images for the validation set and 200 for the test set.
 
 \subsection{Image preprocessing}
+We tried an array of parameters supported by Keras' \verb+ImageDataGenerator+ but with no noteworthy effects on the results.\\
+Then we explored histogram equalization using the function \verb+equalize_adapthist()+ provided by scikit-learn. The effects of this method on an image are depicted in figure \ref{fig:fighistx}. As can be seen in figure \ref{fig:fighistd}, pixels not well represented get more weight and vice versa.
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/before_xray.png} 
+\caption{Before}
+\label{fig:subim1}
+\end{subfigure}
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/after_xray.png}
+\caption{After}
+\label{fig:subim2}
+\end{subfigure}
+\caption{Effects of histogram equalization on X-rays}
+\label{fig:fighistx}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/before_histo.png} 
+\caption{Before}
+\label{fig:subim1}
+\end{subfigure}
+\begin{subfigure}{0.2\textwidth}
+\includegraphics[width=1.0\linewidth]{images/after_histo.png}
+\caption{After}
+\label{fig:subim2}
+\end{subfigure}
+\caption{Effects of histogram equalization on pixel intensity distribution (cf. image in figure \ref{fig:fighistx})}
+\label{fig:fighistd}
+\end{figure}
+
+While on a visual level the effects seem to suggest a leverage for model training, the results were however rather disappointing. When using this method with the baseline \verb+RSNABaseline.py+ it did not cause a significant change in the prediction performance.
+
 
 \subsection{Hyperparameter tuning}
 As is stated in \cite{1802.09596} ...
 
-\subsection{Comparison to baseline}
+\subsection{Use of different architectures}
 
-\subsection{Analysis of results}
+\subsection{Transfer learning}
+All the experiments we conducted had the same setting where the model was first trained on the large NIH chest dataset and then the knowledge transferred to the bone age model in either of two ways: a) in case the architecture was the same for both models, the model was directly reused for training and prediction on the bone age dataset or b) if the architecture changed due to different prediction outputs in the two models, then only the weights of all layers except the top layer were transferred to the new model. This situation is depicted in figure More details are given in the subsequent test case reports.
+
+\begin{figure}[h]
+\includegraphics[scale=0.4]{images/Transfer_learning.png}
+\centering
+\caption{Transfer learning setting}
+\label{fig:transferls}
+\end{figure}
+
+\subsubsection{The three models used}
+To run our experiments we worked with three models as shown in table \ref{table:models}. We mostly used the 'winner' but the others would have served equally well for that purpose.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Model & Architecture \\
+\hline\hline
+baseline & VGG16 with extra layers, cf. \cite{kaggleboneage} \\
+ours & InceptionResNetV2  \\
+winner & InceptionV3, cf. \cite{16bitrsnachallenge} \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Three models and architectures used}
+\label{table:models}
+\end{table}
+
+
+\subsubsection{Validate chest X-rays against disease or patient age}
+First we trained the model (\verb+InceptionV3+, pretrained on ImageNet) on the NIH chest dataset and predict the disease. The model receives an image and the gender as input and outputs the disease as a classification result. Then the same model is instantiated again but the weights are transferred from the previous model. This new model was trained again for finetuning on the bone age dataset with the last 20 layers trainable and all others fixed. So to allow the model to adapt to high level features of the hand X-rays in contrast to the chest features.\\
+Then we repeated the scenario but predicted not the disease in the first model but the patient age. The model was then directly reused to finetune it on the bone age dataset because the architecture could stay exactly the same due to the same top layer.\\
+The results are depicted in figure TODO.
+
+
+\subsubsection{Only chest samples within bone age range}
+The age range in the chest dataset varies across all ages. However the range in the bone age dataset is limited to 20 years. This test aimed at showing possible differences in performance when training the model with chest samples only within age range of 0 to 20 or with all samples.\\
+The results are depicted in figure \ref{fig:maeagerange} showing the mean absolute error on the test set for either case.
+
+\begin{figure}[h]
+\includegraphics[scale=0.4]{images/MAE__age_range.png}
+\centering
+\caption{MAD for bone age model initialized by trained chest model }
+\label{fig:maeagerange}
+\end{figure}
+
+The model trained on chest X-rays only within the age range of 0 to 20 years outperforms the other by 2.7\% and predicts the age with an 1.44 months better accuracy.
+
+\subsubsection{Use different number of fixed layers in model}
+In this experiment we used a fixed scenario except the number of trainable layers in the finetuning step increases with each test run by 10 from 10 to 90 layers. The architecture used is again \verb+InceptionV3+ as in the 'winner' model. The scenario included transfer learning on the chest dataset within the bone age range only and predicting patient age, and then finetuning of the model on the bone age dataset as in the previous experiment.\\
+The results are depicted in figure TODO.
+
+
+\subsubsection{Difference if model pretrained on ImageNet or not}
+We wanted to know what quantitative difference it would make if the model used was not pretrained on ImageNet.  We used the 'winner' model and trained it on the bone age dataset. Two test runs, once the model is pretrained on ImageNet and once without pretraining.\\
+The results are depicted in figure TODO.
+
+\subsubsection{Does including gender as input improve the result?}
+While the 'winner' model incorporated the patient age into their model, we wanted to demonstrate experimentally if the difference in performance was observable and significant. For that we used the 'winner' model and trained it on the bone age dataset once with the gender as input and once without (i.e. only the image) and compared the performances. \\
+The results are depicted in figure TODO.
+
+\subsubsection{Regression vs. Classification on age}
+In this experiment the aim was to analyze the effect of the architecture of the last layer on the performance. We ran two tests with the 'winner' model on the bone age dataset. In the first test the last layer of the model was a dense layer with one output to predict the age as a regression problem. In the second test the last layer consisted of a 240 neuron dense layer representing a classification problem to predict the age between 0 and 240 months.
+The results are depicted in figure TODO.
+
+\subsection{Comparison to baseline}
+The 'baseline' model has a validation MAE of 13.91 months according to \cite{kaggleboneage}.
+
+\subsubsection{Pretrain baseline \cite{kaggleboneage} with NIH chest dataset}
+We took the 'baseline' model and first trained it on the large NIH chest dataset to see if it would perform better in the actual prediction task. Finetuning was used on the bone age dataset with no additional layers freezed. \\
+Our test run achieved a MAE of 17.27 which fell a bit short of our expectations.
+
+
+%------------------------------------------------------------------------
+\section{Discussion}
+
 
 %------------------------------------------------------------------------
 \section{Conclusions}
-
-You must include your signed IEEE copyright release form when you submit
-your finished paper. We MUST have this form before your paper can be
-published in the proceedings.
-
-Please direct any questions to the production editor in charge of these
-proceedings at the IEEE Computer Society Press: Phone (714) 821-8380, or
-Fax (714) 761-1784.
+Prediction based on X-rays is an exciting machine learning challenge.
 
 \printbibliography
 
