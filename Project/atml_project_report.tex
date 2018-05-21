@@ -58,6 +58,7 @@ We mainly focused on the work in \cite{kaggleboneage} and Kevin Mader, respectiv
 Fundamental to our work were two sets of images, namely the Stanford medicine bone age dataset (\cite{stanfordboneage}) as the target for the prediction task and the large NIH chest dataset (\cite{nihchestxray}) for experiments. See figure \ref{fig:imgdss}.
 
 \begin{figure}[h]
+\centering
 \begin{subfigure}{0.2\textwidth}
 \includegraphics[width=1.0\linewidth]{images/sample_boneage.png} 
 \caption{Stanford bone age}
@@ -81,11 +82,26 @@ We proposed a set of methods to apply and experiment with over the baseline and 
 The idea was to preprocess the bone age images in various ways the programming framework would support in order to augment the dataset for better training. Further we wanted to explore the effects of using image histogram equalization with the idea that increased contrast would lead to increased details and therefore a more valuable image for the training process.
 
 \subsection{Rebuilding the 16bit competition winner}
-One approach was to rebuild the winner's model of the 2017 RSNA ML 
-challenge as close as possible according to \cite{16bitrsnachallenge} which uses the \verb+InceptionV3+ architecture. And then use that model as a starting point for our experiments.
+One approach was to rebuild the winner's model 16BitNet of the 2017 RSNA ML challenge as close as possible according to \cite{16bitrsnachallenge} which uses the \verb+InceptionV3+ architecture (cf. figure \ref{fig:16bitnet}). And then use that model as a starting point for our experiments. 
+
+\begin{figure}[h]
+\includegraphics[scale=0.2]{images/16BitNet.png}
+\centering
+\caption{16BitNet architecture}
+\label{fig:16bitnet}
+\end{figure}
 
 \subsection{Use of different architectures}
-Additionally, an idea was to apply an array of different architectures to the model in \cite{16bitrsnachallenge} and replace their architecture choice of \verb+InceptionV3+, respectively.
+Additionally, an idea was to apply an array of different architectures to the 16BitNet model (\cite{16bitrsnachallenge}) and replace their architecture choice of \verb+InceptionV3+, respectively. See figure \ref{fig:SeResNet50} for an example with the SeResNet50 architecture.
+
+\begin{figure}[h]
+\includegraphics[scale=0.6]{images/SeResNet50_arch.png}
+\centering
+\caption{SeResNet50 architecture}
+\label{fig:SeResNet50}
+\end{figure}
+
+For the experiments we used this architecture as the basis but with different networks at the beginning.
 
 \subsection{Transfer learning}
 One approach was to train the model on the large NIH chest X-rays data set and then to transfer the weights to the model for bone age prediction on the much smaller Stanford bone age dataset. 
@@ -119,8 +135,7 @@ Nr & Experiment \\
 We evaluated the effects of our proposed methods.
 
 \subsection{Implementation details}
-All models were trained using Keras \cite{keras} on 1
-GPU on node03 server for 5 epochs (due to time restrictions and contention between three team members). The learning rate was constant until it reached a plateau where it was decreased by a factor of 0.8. We used an initial learning rate of 0.001 to train the models and a default image size of 299x299, the Adam optimizer for default model training and the SGD optimizer for the finetuning. As mostly deep models were used, we repeatedly faced problems with \verb+ResourceExhaustedError+ and had to rethink our way of running the programs. Table lists the different Python programs we developed in the course of this project.
+All models were trained using Keras \cite{keras} on 1 GPU on node03 server for 2 epochs (due to time restrictions and contention on the GPU resource between three team members). The learning rate was constant until it reached a plateau where it was decreased by a factor of 0.8. We used an initial learning rate of 0.001 to train the models and a default image size of 299x299, the Adam optimizer for default model training and the SGD optimizer for the finetuning. As mostly deep models were used, we repeatedly faced problems with \verb+ResourceExhaustedError+ as these have high memory consumption and tried with \verb+backend.clear_session()+ but that also caused crashes for some reason. Table lists the different Python programs we developed in the course of this project.
 
 \begin{table}[h]
 \begin{center}
@@ -193,6 +208,28 @@ While on a visual level the effects seem to suggest a leverage for model trainin
 As is stated in \cite{1802.09596} ...
 
 \subsection{Use of different architectures}
+We set up the experiment as follows: We took five network architectures for training and validation on the bone age dataset. The dataset was split into training and validation dataset with ratio 4:1. Gender information as an additional input was only used in the 16BitNet architecture. Data augmentation: left-right flip, random shift (20\%), random rotation (20 degree) and zoom (0.2). Batch size was 16 for all networks. All networks were trained from scratch except the baseline network (which applied ImageNet pretrained weights). Adam optimizer was applied for all networks and the initial learning rate was 1e-3. As loss function served mean absolute error (MAE). The results of the validation MAE are shown in table \ref{table:archcomp}.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Architecture & MAE & Parameters \\
+\hline\hline
+Baseline (VGG16) & 13.91 & 15,279,905 \\
+16BitNet (InceptionV3) & \textbf{10.18} & 123,157,209 \\
+ResNet50-backbone & 11.79 & 57,352,441 \\
+ResNetXt50-backbone & 14.89 & 56,812,857 \\
+SeResNet50-backbone & 10.51 & 59,825,465 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Evaluation performance in months on validation set (40 epochs)}
+\label{table:archcomp}
+\end{table}
+
+As the table shows the 16BitNet outperforms all others in this experiement. However, it would be interesting to see the performance of SeResNet50-backbone with gender information added as input.
+
 
 \subsection{Transfer learning}
 All the experiments we conducted had the same setting where the model was first trained on the large NIH chest dataset and then the knowledge transferred to the bone age model in either of two ways: a) in case the architecture was the same for both models, the model was directly reused for training and prediction on the bone age dataset or b) if the architecture changed due to different prediction outputs in the two models, then only the weights of all layers except the top layer were transferred to the new model. This situation is depicted in figure More details are given in the subsequent test case reports.
@@ -222,6 +259,9 @@ winner & InceptionV3, cf. \cite{16bitrsnachallenge} \\
 \caption{Three models and architectures used}
 \label{table:models}
 \end{table}
+
+\subsubsection{First attempt at transfer learning}
+TODO achieved a validation MAE 14.43
 
 
 \subsubsection{Validate chest X-rays against disease or patient age}
@@ -275,6 +315,9 @@ Our test run achieved a MAE of 17.27 which fell a bit short of our expectations.
 %------------------------------------------------------------------------
 \section{Conclusions}
 Prediction based on X-rays is an exciting machine learning challenge.
+
+\subsection{Future work}
+Combine all the best results into one architecture and model, respectively.
 
 \printbibliography
 
